@@ -20,6 +20,7 @@ const Summary = () => {
 
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (searchParams.get('success')) {
@@ -37,16 +38,28 @@ const Summary = () => {
   }, 0);
 
   const onCheckout = async () => {
+    if(phone.length < 10 || phone.length > 10){
+      toast.error('Please add Phone');
+      return false
+    }
+    if(address.length <=5){
+      toast.error('Please add Shipping Address');
+      return false;
+    }
+
+    setIsLoading(true)
     const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/checkout`, {
       productIds: items.map((item) => item.id),
       address: address,
       phone: phone
     }).then(function (response) {
-        toast.success('Order Placed.');
+        toast.success('Order Placed. We will contact you for confirmation.');
+        setIsLoading(false)
         window.location = response.data.url;
         removeAll();
     }).catch(function (error) {
         toast.error('Something went wrong.');
+        setIsLoading(false)
     });
   }
 
@@ -99,8 +112,13 @@ const Summary = () => {
           <Currency value={totalPrice} />
         </div>
       </div>
-      <Button disabled={items.length === 0} onClick={onCheckout} className="w-full mt-6">
-        Checkout
+      <Button disabled={items.length === 0} onClick={onCheckout} className="w-full mt-6 flex justify-center items-center">
+        <span className='font-medium'>Place Order</span>
+        {
+          isLoading && (
+            <div className='lds-dual-ring mb-3 ml-2 pb-1'></div> 
+          )
+        }
       </Button>
     </div>
   );
